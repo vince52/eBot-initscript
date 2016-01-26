@@ -1,0 +1,53 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          ebotv3
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     
+# Default-Stop:      
+# X-Interactive:     true
+# Short-Description: start/stop eBot-CSGO
+### END INIT INFO
+
+RETVAL=0
+
+case "$1" in
+  start)
+    echo -n "Starting eBot-V3: "
+    cd /usr/share/eBot-CSGO
+    screen -dmS ebotv3 php5 bootstrap.php
+    RETVAL=$?
+    echo "$NAME."
+    ;;
+  stop)
+    echo -n "Stopping eBot-V3: "
+    kill `cat /var/run/ebotv3.pid`
+    RETVAL=$?
+    echo "$NAME."
+    ;;
+  restart)
+    echo -n "Restarting eBot-V3: "
+    kill `cat /var/run/ebotv3.pid`
+    cd /usr/share/eBot-CSGO
+    screen -dmS ebotv3 php5 bootstrap.php
+    RETVAL=$?
+    echo "$NAME."
+    ;;
+  status)
+    if ps -p `cat /var/run/ebotv3.pid` > /dev/null
+    then
+		echo "eBot-V3 is running"
+	else
+		echo "eBot-V3 is not running !"
+	fi
+    
+    RETVAL=$?
+    ;;
+  *)
+    echo "Usage: ebotv3 {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit $RETVAL
+
