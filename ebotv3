@@ -127,7 +127,7 @@ case "$1" in
 				fi
 			fi
 		else
-			# Since pidfile does not exist, check if screen session is running under (manually started)
+			# Since pidfile does not exist, check if screen session is running under another PID (ie manually started)
 			if [ -z $PID ]; then
 				err_print "$DAEMON not running."
 			else
