@@ -9,43 +9,104 @@
 # Short-Description: start/stop eBot-CSGO
 ### END INIT INFO
 
+# name of daemon (eBot) will be used to name the screen session
+DAEMON="ebotv3"
+# path to daemon (eBot) installation
+DAEMON_PATH="/usr/share/eBot-CSGO"
+# path to eBot WEB installation (used for clear-cache)
+DAEMON_WEB_PATH="/usr/share/eBot-WEB"
+
+# display name of daemon
+NAME="eBot-V3"
 RETVAL=0
 
+# prints message with red text
+function err_print {
+	echo -e "\e[31m$1\e[0m"
+}
+
+# prints message with green text
+function ok_print {
+	echo -e "\e[32m$1\e[0m"
+}
+
+# gets the PID of the DAEMON running in screen (if any)
+function get_pid {
+	echo $(screen -list |grep $DAEMON |cut -f1 -d'.' |sed 's/\W//g')
+}
+
 case "$1" in
-  start)
-    echo -n "Starting eBot-V3: "
-    cd /usr/share/eBot-CSGO
-    screen -dmS ebotv3 php5 bootstrap.php
-    RETVAL=$?
-    echo "$NAME."
-    ;;
-  stop)
-    echo -n "Stopping eBot-V3: "
-    kill `cat /var/run/ebotv3.pid`
-    RETVAL=$?
-    echo "$NAME."
-    ;;
-  restart)
-    echo -n "Restarting eBot-V3: "
-    kill `cat /var/run/ebotv3.pid`
-    cd /usr/share/eBot-CSGO
-    screen -dmS ebotv3 php5 bootstrap.php
-    RETVAL=$?
-    echo "$NAME."
-    ;;
-  status)
-    if ps -p `cat /var/run/ebotv3.pid` > /dev/null
-    then
-		echo "eBot-V3 is running"
-	else
-		echo "eBot-V3 is not running !"
-	fi
-    
-    RETVAL=$?
+	start)
+		echo -n "Starting $NAME: "
+
+		# see if we have correct path to eBot-CSGO installation
+		if [ ! -d $DAEMON_PATH ]; then
+			err_print "DAEMON_PATH variable is set to '$DAEMON_PATH', the directory does not exist therefore I am unable to start $DAEMON. Update script with correct path."
+			exit -1
+		fi
+		cd $DAEMON_PATH
+		screen -dmS $DAEMON php5 bootstrap.php
+		RETVAL=$?
+		PID=$(get_pid)
+		if [ -z $PID ]; then
+			err_print "Failed to start $DAEMON (RC: $RETVAL)."
+		else
+			ok_print "$DAEMON started (PID: $PID)."
+		fi
+	;;
+	stop)
+		echo -n "Stopping $NAME: "
+		PID=$(get_pid)
+		if [ ! -z $PID ]; then
+			kill $PID
+			RETVAL=$?
+			if [ $RETVAL -eq 0 ]; then
+				ok_print "stopped $DAEMON."
+			else
+				err_print "unable to stop $DAEMON return code: $RETVAL."
+			fi
+		else
+			err_print "$DAEMON already stopped."
+		fi
+	;;
+	clear-cache)
+		echo "Clearing webcache..."
+
+		# see if we have correct path to eBot-WEB installation
+		if [ ! -d $DAEMON_WEB_PATH ]; then
+			err_print "DAEMON_WEB_PATH variable is set to '$DAEMON_WEB_PATH', the directory does not exist therefore I am unable to clear web cache. Update script with correct path."
+			exit -1
+		fi
+
+		# Clear symfony cache
+		cd $DAEMON_WEB_PATH
+		php symfony cc
+		RETVAL=$?
+
+		# sanity check of return code
+		if [ $RETVAL -eq 0 ]; then
+			ok_print "Cache cleared successfully.";
+		else
+			err_print "Got unexpected return code $RETVAL when clearing cache."
+		fi
+	;;
+	restart)
+		echo "Restarting $NAME..."
+		$0 stop
+		$0 start
+	;;
+	status)
+		echo -n "$NAME: "
+		PID=$(get_pid)
+		if [ -z $PID ]; then
+			err_print "$DAEMON not running."
+		else
+			ok_print "$DAEMON running (PID $PID)."
+		fi
     ;;
   *)
-    echo "Usage: ebotv3 {start|stop|restart|status}"
-    exit 1
+	echo "Usage: $0 {start|stop|restart|status|clear-cache}"
+	exit 1
     ;;
 esac
 
