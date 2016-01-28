@@ -18,6 +18,7 @@ DAEMON_WEB_PATH="/usr/share/eBot-WEB"
 
 # display name of daemon
 NAME="eBot-V3"
+PIDFILE=/var/run/${DAEMON}.pid
 RETVAL=0
 
 # prints message with red text
@@ -52,6 +53,7 @@ case "$1" in
 			err_print "Failed to start $DAEMON (RC: $RETVAL)."
 		else
 			ok_print "$DAEMON started (PID: $PID)."
+			echo $PID > $PIDFILE
 		fi
 	;;
 	stop)
@@ -68,6 +70,8 @@ case "$1" in
 		else
 			err_print "$DAEMON already stopped."
 		fi
+
+		rm -rf $PIDFILE
 	;;
 	clear-cache)
 		echo "Clearing webcache..."
@@ -98,10 +102,38 @@ case "$1" in
 	status)
 		echo -n "$NAME: "
 		PID=$(get_pid)
-		if [ -z $PID ]; then
-			err_print "$DAEMON not running."
+
+		# see if pidfile exists
+		if [ -f $PIDFILE ]; then
+			# pid according to PIDFILE
+			PIDF=$(cat $PIDFILE)
+			RETVAL=$?
+
+			# PID in PIDFILE running?
+			if [ -z "$(ps axf |grep $PIDF |grep -v grep)" ]; then
+				# since PID in PIDFILE is not running, see if it is running under a different PID (ie manually started)
+				if [ -z $PID ]; then
+					err_print "Process dead, but pidfile exists."
+				else
+					err_print "Process running under PID $PID, but pidfile contains $PIDF."
+				fi
+			else
+				# sanity check of screen session PID and pidfile content, check that they are equal
+				if [ "$PID" -eq "$PIDF" ]; then
+					DAEMON_UPTIME=$(date -u -d "0 $(date +%s) sec-$(date +%s -r $PIDFILE) sec" +"%H:%M:%S")
+					ok_print "$DAEMON running (PID $PID) uptime: $DAEMON_UPTIME (hh:mm:ss)."
+				else
+					err_print "$DAEMON running under PID $PID, but pidfile contains $PIDF."
+				fi
+			fi
 		else
-			ok_print "$DAEMON running (PID $PID)."
+			# Since pidfile does not exist, check if screen session is running under (manually started)
+			if [ -z $PID ]; then
+				err_print "$DAEMON not running."
+			else
+				err_print "$DAEMON running under pid $PID, but pidfile does not exist."
+			fi
+
 		fi
     ;;
   *)
