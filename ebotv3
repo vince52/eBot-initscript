@@ -33,7 +33,7 @@ function ok_print {
 
 # gets the PID of the DAEMON running in screen (if any)
 function get_pid {
-	echo $(screen -list |grep $DAEMON |cut -f1 -d'.' |sed 's/\W//g')
+	echo $(ps axf |grep $DAEMON |grep ' SCREEN ' |awk '{print $1}' |sed 's/\W//g')
 }
 
 case "$1" in
