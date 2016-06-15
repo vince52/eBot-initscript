@@ -12,9 +12,9 @@
 # name of daemon (eBot) will be used to name the screen session
 DAEMON="ebotv3"
 # path to daemon (eBot) installation
-DAEMON_PATH="/usr/share/eBot-CSGO"
+DAEMON_PATH="/home/ebot/ebot-csgo"
 # path to eBot WEB installation (used for clear-cache)
-DAEMON_WEB_PATH="/usr/share/eBot-WEB"
+DAEMON_WEB_PATH="/home/ebot/ebot-web"
 
 # display name of daemon
 NAME="eBot-V3"
