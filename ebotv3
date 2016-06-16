@@ -46,7 +46,7 @@ case "$1" in
 			exit -1
 		fi
 		cd $DAEMON_PATH
-		screen -dmS $DAEMON php5 bootstrap.php
+		screen -dmS $DAEMON php bootstrap.php
 		RETVAL=$?
 		PID=$(get_pid)
 		if [ -z $PID ]; then
