@@ -49,7 +49,7 @@ case "$1" in
 		screen -dmS $DAEMON php bootstrap.php
 		RETVAL=$?
 		PID=$(get_pid)
-		if [ -z $PID ]; then
+		if [ -z "$PID" ]; then
 			err_print "Failed to start $DAEMON (RC: $RETVAL)."
 		else
 			ok_print "$DAEMON started (PID: $PID)."
@@ -112,7 +112,7 @@ case "$1" in
 			# PID in PIDFILE running?
 			if [ -z "$(ps axf |grep $PIDF |grep -v grep)" ]; then
 				# since PID in PIDFILE is not running, see if it is running under a different PID (ie manually started)
-				if [ -z $PID ]; then
+				if [ -z "$PID" ]; then
 					err_print "Process dead, but pidfile exists."
 				else
 					err_print "Process running under PID $PID, but pidfile contains $PIDF."
@@ -128,7 +128,7 @@ case "$1" in
 			fi
 		else
 			# Since pidfile does not exist, check if screen session is running under another PID (ie manually started)
-			if [ -z $PID ]; then
+			if [ -z "$PID" ]; then
 				err_print "$DAEMON not running."
 			else
 				err_print "$DAEMON running under pid $PID, but pidfile does not exist."
